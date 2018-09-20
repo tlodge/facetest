@@ -1,13 +1,23 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="index.css">
-    <script src="sha1.js"></script>
-    <script src="http.js"></script>
-    <script src="index.js"></script>
-  </head>
-  <body>
-    <textarea id="log"></textarea>
-    <input type="text" id="input" placeholder="Type a message to other connected clients here">
-  </body>
+
+<head>
+  <link rel="stylesheet" href="index.css">
+  <script src="interfaces.js"></script>
+  <script src="sha1.js"></script>
+  <script src="http.js"></script>
+  <script src="webcam.js"></script>
+  <script src="index.js"></script>
+
+</head>
+
+<body>
+  <div id="interfaces">
+  </div>
+  <!--<video id="vid" width="400" height="300" preload="auto" loop></video>-->
+  <video width="400" height="300" autoplay></video>
+  <div id="images"></div>
+</body>
+
+
 </html>

@@ -1,9 +1,22 @@
+window.resizeTo(300, 352);
+
 function $(id) {
   return document.getElementById(id);
 }
 
-function log(text) {
-  $('log').value += text + '\n';
+
+
+function umSuccess(stream) {
+  console.log("successfully captured some video!!!");
+  if (vid.mozCaptureStream) {
+    vid.mozSrcObject = stream;
+  } else {
+    vid.src = (window.URL && window.URL.createObjectURL(stream)) ||
+      stream;
+  }
+  vid.play();
+  vidReady = true;
+  //sendFrameLoop();
 }
 
 var port = 9999;
@@ -15,7 +28,7 @@ if (http.Server && http.WebSocketServer) {
   server.listen(port);
   isServer = true;
 
-  server.addEventListener('request', function(req) {
+  server.addEventListener('request', function (req) {
     var url = req.headers.url;
     if (url == '/')
       url = '/index.html';
@@ -27,58 +40,76 @@ if (http.Server && http.WebSocketServer) {
   // A list of connected websockets.
   var connectedSockets = [];
 
-  wsServer.addEventListener('request', function(req) {
+  wsServer.addEventListener('request', function (req) {
     log('Client connected');
     var socket = req.accept();
-    connectedSockets.push(socket);
+    //connectedSockets.push(socket);
 
     // When a message is received on one socket, rebroadcast it on all
     // connected sockets.
-    socket.addEventListener('message', function(e) {
-      for (var i = 0; i < connectedSockets.length; i++)
-        connectedSockets[i].send(e.data);
+    socket.addEventListener('message', function (e) {
+      const msg = JSON.parse(e.data);
+      if (msg.type === "fetch") {
+        var data = latest();
+        socket.send(data);
+      }
+      else if (msg.type === "result") {
+        console.log("would do something with result!!");
+        //console.log(msg.image);
+        //var htmlImg = '<img src=data:image/jpeg;base64,' + outBase64 + '>';
+        try {
+          var img = document.createElement("img");
+          img.src = msg.image;
+          var imgdiv = document.getElementById("images");
+          imgdiv.appendChild(img)
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      //for (var i = 0; i < connectedSockets.length; i++) {
+      //console.log("sending", latest())
+      //var data = JSON.stringify(latest());
+      //console.log(data);
+      //  connectedSockets[i].send(data);
+      // }
     });
 
     // When a socket is closed, remove it from the list of connected sockets.
-    socket.addEventListener('close', function() {
+    socket.addEventListener('close', function () {
       log('Client disconnected');
-      for (var i = 0; i < connectedSockets.length; i++) {
-        if (connectedSockets[i] == socket) {
-          connectedSockets.splice(i, 1);
-          break;
-        }
-      }
+      //for (var i = 0; i < connectedSockets.length; i++) {
+      //  if (connectedSockets[i] == socket) {
+      //    connectedSockets.splice(i, 1);
+      //    break;
+      //  }
+      //}
     });
     return true;
   });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  log('This is a test of an HTTP and WebSocket server. This application is ' +
-      'serving its own source code on port ' + port + '. Each client ' +
-      'connects to the server on a WebSocket and all messages received on ' +
-      'one WebSocket are echoed to all connected clients - i.e. a chat ' +
-      'server. Enjoy!');
-// FIXME: Wait for 1s so that HTTP Server socket is listening...
-setTimeout(function() {
-  var address = isServer ? 'ws://localhost:' + port + '/' :
-      window.location.href.replace('http', 'ws');
-  var ws = new WebSocket(address);
-  ws.addEventListener('open', function() {
-    log('Connected');
+document.addEventListener('DOMContentLoaded', function () {
+
+  navigator.getUserMedia = navigator.getUserMedia ||
+    navigator.webkitGetUserMedia ||
+    (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ?
+    function (c, os, oe) {
+      navigator.mediaDevices.getUserMedia(c).then(os, oe);
+    } : null ||
+    navigator.msGetUserMedia;
+
+  window.URL = window.URL ||
+    window.webkitURL ||
+    window.msURL ||
+    window.mozURL;
+
+
+  interfaces().then(function (ifaces) {
+    var idiv = document.getElementById("interfaces");
+    ifaces.forEach(function (iface) {
+      var addr = document.createElement("h2");
+      addr.innerHTML = iface;
+      idiv.appendChild(addr);
+    })
   });
-  ws.addEventListener('close', function() {
-    log('Connection lost');
-    $('input').disabled = true;
-  });
-  ws.addEventListener('message', function(e) {
-    log(e.data);
-  });
-  $('input').addEventListener('keydown', function(e) {
-    if (ws && ws.readyState == 1 && e.keyCode == 13) {
-      ws.send(this.value);
-      this.value = '';
-    }
-  });
-}, 1e3);
 });

@@ -3,20 +3,23 @@
   "description": "Runs an Http and WebSocket server with a quick and dirty test chat application.",
   "version": "0.3.2",
   "manifest_version": 2,
-
   "sockets": {
     "tcp": {
       "connect": "*"
     },
-
     "tcpServer": {
       "listen": "*"
     }
   },
-  
   "app": {
     "background": {
-      "scripts": ["background.js"]
+      "scripts": [
+        "background.js"
+      ]
     }
-  }
+  },
+  "permissions": [
+    "videoCapture",
+    "system.network"
+  ]
 }
