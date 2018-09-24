@@ -81,6 +81,8 @@ kvc.RegisterDatasource(configSchema).then(() => {
     kvc.RegisterDatasource(imageSchema).then(() => {
         console.log("finished registering webcam image datasource!");
     });
+}).catch((err) => {
+    console.log("error registering", err);
 })
 
 console.log("[Creating https server]", PORT);
