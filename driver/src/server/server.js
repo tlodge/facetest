@@ -1,4 +1,5 @@
 import https from 'https';
+import http from "http";
 import express from "express";
 import bodyParser from "body-parser";
 import databox from 'node-databox';
@@ -11,12 +12,11 @@ const imageSchema = {
     Vendor: 'Databox Inc.',
     DataSourceType: 'browserWebcamImage',
     DataSourceID: 'browserWebcamImage',
-    StoreType: 'ts',
-    IsActuator: false,
+    StoreType: 'kv',
 }
 
 const configSchema = {
-    ...metaData,
+    ...databox.NewDataSourceMetadata(),
     Description: 'Webcam: chrome app IP address',
     ContentType: 'application/json',
     Vendor: 'Databox Inc.',
@@ -25,13 +25,14 @@ const configSchema = {
     StoreType: 'kv',
 }
 
-const DATABOX_ZMQ_ENDPOINT = process.env.DATABOX_ZMQ_ENDPOINT
+const DATABOX_ZMQ_ENDPOINT = "tcp://0.0.0.0:4444";// ;//process.env.DATABOX_ZMQ_ENDPOINT
 const credentials = databox.getHttpsCredentials();
 
 const PORT = process.env.port || '8080';
 
+console.log("creating kvc and tsc clients");
 const kvc = databox.NewKeyValueClient(DATABOX_ZMQ_ENDPOINT, false);
-const tsc = databox.NewTimeSeriesBlobClient(DATABOX_ZMQ_ENDPOINT, false);
+console.log("done!");
 
 const connect = (ip) => {
 
@@ -47,14 +48,18 @@ const connect = (ip) => {
         }
 
         ws.on('open', function open() {
-            ws.send(JSON.stringify({ type: "fetch" }));
+            const fetch = () => {
+                console.log("fetching new image");
+                ws.send(JSON.stringify({ type: "fetch" }));
+                setTimeout(fetch, 1000);
+            }
         });
 
         ws.on('message', function incoming(msg) {
-            console.log("writing image to timeseries store");
+            console.log("writing image to kv store");
             try {
                 const data = JSON.parse(msg);
-                tsc.Write(imageSchema.DataSourceID, data).then((body) => {
+                kvc.Write(imageSchema.DataSourceID, "image", { data: data.image }).then((body) => {
                     console.log("successfully written image");
                 }).catch((error) => {
                     console.log("failed to write image", error);
@@ -67,12 +72,14 @@ const connect = (ip) => {
     connectws();
 }
 
+console.log("registering datasource", JSON.stringify(configSchema, null, 4));
+
 kvc.RegisterDatasource(configSchema).then(() => {
 
     console.log("finished registering webcam config datasource");
-
-    tsc.RegisterDatasource(imageSchema).then(() => {
-        console.log("finished registering image datasource!");
+    console.log("registering image datasource", JSON.stringify(imageSchema, null, 4));
+    kvc.RegisterDatasource(imageSchema).then(() => {
+        console.log("finished registering webcam image datasource!");
     });
 })
 
@@ -87,13 +94,12 @@ app.use(bodyParser.json());
 
 app.use('/', express.static('./www'));
 
-app.get('/ui', (req, res) => {
+app.get('/', (req, res) => {
     console.log("in ui endpoint!!");
     res.render('index');
 });
 
-
-app.get('/ui/getConfig', (req, res) => {
+app.get('/ui/getConfiguration', (req, res) => {
     console.log("getting driver config");
 
     kvc.Read(configSchema.DataSourceID, "config").then((result) => {
@@ -102,7 +108,7 @@ app.get('/ui/getConfig', (req, res) => {
     });
 });
 
-app.post('/ui/setCameraIP', (req, res) => {
+app.post('/ui/setConfiguration', (req, res) => {
     console.log("setting camera IP");
     console.log(JSON.stringify(req.body));
 
@@ -130,4 +136,5 @@ app.get("/status", function (req, res) {
 });
 
 
-https.createServer(credentials, app).listen(PORT);
+//https.createServer(credentials, app).listen(PORT);
+http.createServer(app).listen(PORT);

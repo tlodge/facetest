@@ -1,0 +1,27 @@
+{
+    "manifest-version": 1,
+    "name": "databox-browser-webcam-driver",
+    "version": "0.5.0",
+    "description": "A Databox driver to store a user's profile data",
+    "author": "Tom Lodge <Thomas.Lodge@nottingham.ac.uk> ()",
+    "license": "MIT",
+    "databox-type": "driver",
+    "tags": [
+        "store",
+        "blob",
+        "db",
+        "native",
+        "json"
+    ],
+    "homepage": "https://github.com/me-box/databox-browser-webcam-driver",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/me-box/databox-browser-webcam-driver.git"
+    },
+    "network-permissions": [],
+    "external-whitelist": [],
+    "hardware-permissions": [],
+    "resource-requirements": {
+        "store": "core-store"
+    }
+}

@@ -1,10 +1,10 @@
 import { combineReducers } from 'redux';
 //import { routerReducer as routing } from 'react-router-redux';
 
-import physical, { NAME as physicalName } from './features/physical';
+import configuration, { NAME as configurationName } from './features/configuration';
 
 
 export default combineReducers({
     //routing,
-    [physicalName]: physical,
+    [configurationName]: configuration,
 });
