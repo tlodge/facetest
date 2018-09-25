@@ -7,6 +7,9 @@ const ws = new WebSocket('ws://127.0.0.1:9999', {
 });
 
 //let socketReady = false;
+ws.on("error", function (err) {
+  console.log("error conncetiong", err);
+});
 
 ws.on('open', function open() {
   socketReady = true;

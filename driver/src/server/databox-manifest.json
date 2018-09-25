@@ -13,10 +13,10 @@
         "native",
         "json"
     ],
-    "homepage": "https://github.com/me-box/databox-browser-webcam-driver",
+    "homepage": "https://github.com/tlodge/databox-browser-webcam-driver",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/me-box/databox-browser-webcam-driver.git"
+        "url": "git+https://github.com/tlodge/databox-browser-webcam-driver.git"
     },
     "network-permissions": [],
     "external-whitelist": [],

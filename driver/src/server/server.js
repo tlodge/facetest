@@ -25,12 +25,13 @@ const configSchema = {
     StoreType: 'kv',
 }
 
-const DATABOX_ZMQ_ENDPOINT = "tcp://0.0.0.0:4444";// ;//process.env.DATABOX_ZMQ_ENDPOINT
+const DATABOX_ZMQ_ENDPOINT = process.env.DATABOX_ZMQ_ENDPOINT;
+//"tcp://127.0.0.1:5555";// 
 const credentials = databox.getHttpsCredentials();
 
 const PORT = process.env.port || '8080';
 
-console.log("creating kvc and tsc clients");
+console.log("creating kvc client");
 const kvc = databox.NewKeyValueClient(DATABOX_ZMQ_ENDPOINT, false);
 console.log("done!");
 
@@ -38,29 +39,36 @@ const connect = (ip) => {
 
     console.log("connecting to chrome app with ip", ip);
 
-    const connectws = () => {
-        let ws;
-        try {
-            ws = new WebSocket(`ws://${ip}:9999`, { perMessageDeflate: false });
-        } catch (err) {
-            console.log("error connecting, trying again in 1s", err);
-            setTimeout(connectws, 1000);
-        }
+
+
+    let ws;
+
+
+
+    const setupListeners = (ws) => {
+        ws.on('error', function error(err) {
+            console.log("error connecting!", err);
+            setTimeout(establishconn, 1000);
+            //setTimeout(fetch, 1000);
+        });
 
         ws.on('open', function open() {
+            console.log("opened conncetion!")
             const fetch = () => {
                 console.log("fetching new image");
                 ws.send(JSON.stringify({ type: "fetch" }));
                 setTimeout(fetch, 1000);
             }
+            fetch();
         });
 
         ws.on('message', function incoming(msg) {
             console.log("writing image to kv store");
             try {
                 const data = JSON.parse(msg);
+                console.log("writing", { data: data.image });
                 kvc.Write(imageSchema.DataSourceID, "image", { data: data.image }).then((body) => {
-                    console.log("successfully written image");
+                    console.log("successfully written image", body);
                 }).catch((error) => {
                     console.log("failed to write image", error);
                 });
@@ -69,7 +77,20 @@ const connect = (ip) => {
             }
         });
     }
-    connectws();
+
+    const establishconn = () => {
+        try {
+            console.log("connecting to", `ws://${ip}:9999`);
+            ws = new WebSocket(`ws://${ip}:9999`, { perMessageDeflate: false });
+        } catch (err) {
+            console.log("error connecting, trying again in 1s", err);
+            setTimeout(establishconn, 1000);
+        }
+        setupListeners(ws);
+    }
+
+    establishconn();
+
 }
 
 console.log("registering datasource", JSON.stringify(configSchema, null, 4));
@@ -114,23 +135,26 @@ app.post('/ui/setConfiguration', (req, res) => {
     console.log("setting camera IP");
     console.log(JSON.stringify(req.body));
 
-    if (!req.body || !req.body.attributes) {
-        res.send({ success: true });
-        return;
-    }
+    //if (!req.body || !req.body.attributes) {
 
-    const ip = req.body.ip;
+    //return;
+    // }
 
+    const ip = req.body.configuration.webcamip;
+
+    console.log("ip is", ip);
     return new Promise((resolve, reject) => {
         kvc.Write(configSchema.DataSourceID, "config", { key: configSchema.DataSourceID, value: ip }).then(() => {
-            console.log("successfully written!");
+            console.log("successfully written!", ip);
             connect(ip);
             resolve();
         }).catch((err) => {
             console.log("failed to write", err);
             reject(err);
         });
-    })
+    }).then(() => {
+        res.send({ success: true });
+    });
 });
 
 app.get("/status", function (req, res) {
@@ -138,5 +162,5 @@ app.get("/status", function (req, res) {
 });
 
 
-//https.createServer(credentials, app).listen(PORT);
-http.createServer(app).listen(PORT);
+https.createServer(credentials, app).listen(PORT);
+//http.createServer(app).listen(PORT);

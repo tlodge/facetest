@@ -1,10 +1,10 @@
-window.resizeTo(300, 352);
-
 function $(id) {
   return document.getElementById(id);
 }
 
-
+function log(str) {
+  console.log(str);
+}
 
 function umSuccess(stream) {
   console.log("successfully captured some video!!!");
@@ -102,7 +102,6 @@ document.addEventListener('DOMContentLoaded', function () {
     window.webkitURL ||
     window.msURL ||
     window.mozURL;
-
 
   interfaces().then(function (ifaces) {
     var idiv = document.getElementById("interfaces");

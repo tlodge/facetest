@@ -1,4 +1,6 @@
 
+
+
 navigator.getUserMedia = navigator.getUserMedia ||
     navigator.webkitGetUserMedia ||
     (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ?
@@ -14,7 +16,7 @@ var storeFrameLoop = function () {
     var canvas = document.createElement('canvas');
     canvas.width = video.width;
     canvas.height = video.height;
-    console.log(video.width, video.height);
+    //console.log(video.width, video.height);
     var cc = canvas.getContext('2d');
     cc.drawImage(video, 0, 0, video.width, video.height);
     //var apx = cc.getImageData(0, 0, video.width, video.height);
@@ -30,7 +32,7 @@ var latest = function () {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-
+    window.resizeTo(300, 348);
     if (navigator.getUserMedia) {
         //var vid = document.getElementById('vid');
 
