@@ -63,17 +63,16 @@ const connect = (ip) => {
         });
 
         ws.on('message', function incoming(msg) {
-            console.log("writing image to kv store");
             try {
                 const data = JSON.parse(msg);
-                console.log("writing", { data: data.image });
+                console.log("writing image to kv store");
                 kvc.Write(imageSchema.DataSourceID, "image", { data: data.image }).then((body) => {
-                    console.log("successfully written image", body);
+                    console.log("successfully written image:", body);
                 }).catch((error) => {
                     console.log("failed to write image", error);
                 });
             } catch (err) {
-                console.log(err);
+                console.log("ERROR!!", err);
             }
         });
     }
@@ -118,6 +117,11 @@ app.use(bodyParser.json());
 app.use('/', express.static('./www'));
 
 app.get('/', (req, res) => {
+    console.log("in ui endpoint!!");
+    res.render('index');
+});
+
+app.get('/ui', (req, res) => {
     console.log("in ui endpoint!!");
     res.render('index');
 });
